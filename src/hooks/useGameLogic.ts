@@ -1,16 +1,22 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Animated, Dimensions } from 'react-native';
-import { VocabularyWord, GameState, FallingWordState } from '../types';
+import { VocabularyWord, GameState } from '../types';
 import { vocabularyLibrary, LanguageKey } from '../data/vocabulary';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 const INITIAL_LIVES = 3;
-const BASE_FALL_DURATION = 8000; // 8 seconds base fall time
-const MIN_FALL_DURATION = 3000; // Minimum 3 seconds
-const SPAWN_INTERVAL_BASE = 3000; // 3 seconds between spawns
-const SPAWN_INTERVAL_MIN = 1500; // Minimum 1.5 seconds
+
+// SLOWER difficulty settings for a more relaxed experience
+const BASE_FALL_DURATION = 12000; // 12 seconds base fall time (was 8)
+const MIN_FALL_DURATION = 5000;   // Minimum 5 seconds (was 3)
+const FALL_SPEED_DECREASE_PER_LEVEL = 300; // Slower decrease per level (was 500)
+
+const SPAWN_INTERVAL_BASE = 4500; // 4.5 seconds between spawns (was 3)
+const SPAWN_INTERVAL_MIN = 2000;  // Minimum 2 seconds (was 1.5)
+const SPAWN_INTERVAL_DECREASE_PER_LEVEL = 150; // Slower decrease per level (was 200)
+
 const POINTS_PER_WORD = 10;
-const WORDS_PER_LEVEL = 5;
+const WORDS_PER_LEVEL = 10; // 10 words per level (was 5) - slower progression
 
 interface FallingWord {
   id: string;
@@ -52,12 +58,14 @@ export const useGameLogic = (language: LanguageKey = 'spanish') => {
   }, [vocabulary]);
 
   const getFallDuration = useCallback((level: number) => {
-    const duration = BASE_FALL_DURATION - (level - 1) * 500;
+    // Gradual decrease in fall duration (slower progression)
+    const duration = BASE_FALL_DURATION - (level - 1) * FALL_SPEED_DECREASE_PER_LEVEL;
     return Math.max(duration, MIN_FALL_DURATION);
   }, []);
 
   const getSpawnInterval = useCallback((level: number) => {
-    const interval = SPAWN_INTERVAL_BASE - (level - 1) * 200;
+    // Gradual decrease in spawn interval (slower progression)
+    const interval = SPAWN_INTERVAL_BASE - (level - 1) * SPAWN_INTERVAL_DECREASE_PER_LEVEL;
     return Math.max(interval, SPAWN_INTERVAL_MIN);
   }, []);
 
@@ -77,7 +85,8 @@ export const useGameLogic = (language: LanguageKey = 'spanish') => {
     if (!word) return;
 
     const id = `${word.id}-${Date.now()}`;
-    const x = 10 + Math.random() * 60; // 10-70% from left
+    // Ensure words spawn with enough margin from edges
+    const x = 15 + Math.random() * 50; // 15-65% from left (better centering)
     const animatedY = new Animated.Value(0);
 
     const newWord: FallingWord = {
@@ -110,7 +119,7 @@ export const useGameLogic = (language: LanguageKey = 'spanish') => {
           return { ...prev, lives: newLives };
         });
         setFeedback({ type: 'missed', word: word.translation });
-        setTimeout(() => setFeedback({ type: null }), 1000);
+        setTimeout(() => setFeedback({ type: null }), 1500);
         removeWord(id);
       }
     });
@@ -197,13 +206,16 @@ export const useGameLogic = (language: LanguageKey = 'spanish') => {
   // Spawn words at intervals
   useEffect(() => {
     if (gameState.isPlaying && !gameState.isPaused && !gameState.isGameOver) {
-      // Spawn first word immediately
-      spawnWord();
+      // Small delay before spawning first word for better UX
+      const initialDelay = setTimeout(() => {
+        spawnWord();
+      }, 500);
 
       const interval = getSpawnInterval(gameState.level);
       spawnIntervalRef.current = setInterval(spawnWord, interval);
 
       return () => {
+        clearTimeout(initialDelay);
         if (spawnIntervalRef.current) {
           clearInterval(spawnIntervalRef.current);
         }

@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { GameState } from '../types';
+import { colors, typography, spacing, shadows, borderRadius } from '../theme';
 
 interface GameHeaderProps {
   gameState: GameState;
@@ -14,9 +15,17 @@ export const GameHeader: React.FC<GameHeaderProps> = ({ gameState, onPause }) =>
     const hearts = [];
     for (let i = 0; i < 3; i++) {
       hearts.push(
-        <Text key={i} style={styles.heart}>
-          {i < lives ? '❤️' : '🖤'}
-        </Text>
+        <View
+          key={i}
+          style={[
+            styles.heartContainer,
+            i < lives ? styles.heartActive : styles.heartInactive,
+          ]}
+        >
+          <Text style={styles.heart}>
+            {i < lives ? '❤️' : '🤍'}
+          </Text>
+        </View>
       );
     }
     return hearts;
@@ -24,21 +33,33 @@ export const GameHeader: React.FC<GameHeaderProps> = ({ gameState, onPause }) =>
 
   return (
     <View style={styles.container}>
-      <View style={styles.leftSection}>
-        <View style={styles.livesContainer}>{renderHearts()}</View>
-      </View>
-
-      <View style={styles.centerSection}>
-        <View style={styles.levelBadge}>
-          <Text style={styles.levelText}>Level {level}</Text>
+      {/* Lives */}
+      <View style={styles.section}>
+        <View style={styles.livesCard}>
+          {renderHearts()}
         </View>
       </View>
 
-      <View style={styles.rightSection}>
-        <Text style={styles.scoreLabel}>Score</Text>
-        <Text style={styles.scoreValue}>{score}</Text>
-        <TouchableOpacity onPress={onPause} style={styles.pauseButton}>
-          <Text style={styles.pauseText}>⏸️</Text>
+      {/* Level Badge */}
+      <View style={styles.section}>
+        <View style={styles.levelBadge}>
+          <Text style={styles.levelLabel}>LEVEL</Text>
+          <Text style={styles.levelValue}>{level}</Text>
+        </View>
+      </View>
+
+      {/* Score & Pause */}
+      <View style={[styles.section, styles.rightSection]}>
+        <View style={styles.scoreCard}>
+          <Text style={styles.scoreLabel}>Score</Text>
+          <Text style={styles.scoreValue}>{score}</Text>
+        </View>
+        <TouchableOpacity
+          onPress={onPause}
+          style={styles.pauseButton}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.pauseIcon}>⏸️</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -50,58 +71,88 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
   },
-  leftSection: {
+  section: {
     flex: 1,
-    alignItems: 'flex-start',
-  },
-  centerSection: {
-    flex: 1,
-    alignItems: 'center',
   },
   rightSection: {
-    flex: 1,
-    alignItems: 'flex-end',
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    gap: 8,
+    alignItems: 'center',
   },
-  livesContainer: {
+  livesCard: {
     flexDirection: 'row',
-    gap: 4,
+    backgroundColor: colors.background.card,
+    borderRadius: borderRadius.full,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    alignSelf: 'flex-start',
+    ...shadows.small,
+  },
+  heartContainer: {
+    marginHorizontal: 2,
+  },
+  heartActive: {
+    transform: [{ scale: 1 }],
+  },
+  heartInactive: {
+    opacity: 0.5,
   },
   heart: {
-    fontSize: 20,
+    fontSize: 18,
   },
   levelBadge: {
-    backgroundColor: '#FFD700',
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 15,
+    backgroundColor: colors.accent.yellow,
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    alignItems: 'center',
+    alignSelf: 'center',
+    ...shadows.small,
   },
-  levelText: {
-    color: '#333',
-    fontWeight: '700',
-    fontSize: 14,
+  levelLabel: {
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.semibold,
+    color: colors.text.primary,
+    letterSpacing: 1,
+  },
+  levelValue: {
+    fontSize: typography.sizes.xl,
+    fontWeight: typography.weights.heavy,
+    color: colors.text.primary,
+    marginTop: -2,
+  },
+  scoreCard: {
+    backgroundColor: colors.background.card,
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    alignItems: 'center',
+    ...shadows.small,
   },
   scoreLabel: {
-    color: '#fff',
-    fontSize: 12,
-    opacity: 0.8,
+    fontSize: typography.sizes.xs,
+    color: colors.text.secondary,
+    fontWeight: typography.weights.medium,
   },
   scoreValue: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: typography.sizes.lg,
+    fontWeight: typography.weights.bold,
+    color: colors.rain.droplet,
   },
   pauseButton: {
-    marginLeft: 8,
-    padding: 4,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.background.card,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: spacing.sm,
+    ...shadows.small,
   },
-  pauseText: {
+  pauseIcon: {
     fontSize: 20,
   },
 });
