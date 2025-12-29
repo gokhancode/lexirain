@@ -7,13 +7,13 @@ const SCREEN_HEIGHT = Dimensions.get('window').height;
 const INITIAL_LIVES = 3;
 
 // SLOWER difficulty settings for a more relaxed experience
-const BASE_FALL_DURATION = 12000; // 12 seconds base fall time (was 8)
-const MIN_FALL_DURATION = 5000;   // Minimum 5 seconds (was 3)
-const FALL_SPEED_DECREASE_PER_LEVEL = 300; // Slower decrease per level (was 500)
+const BASE_FALL_DURATION = 18000; // 18 seconds base fall time (slower)
+const MIN_FALL_DURATION = 8000;   // Minimum 8 seconds (slower)
+const FALL_SPEED_DECREASE_PER_LEVEL = 200; // Even slower decrease per level
 
-const SPAWN_INTERVAL_BASE = 4500; // 4.5 seconds between spawns (was 3)
-const SPAWN_INTERVAL_MIN = 2000;  // Minimum 2 seconds (was 1.5)
-const SPAWN_INTERVAL_DECREASE_PER_LEVEL = 150; // Slower decrease per level (was 200)
+const SPAWN_INTERVAL_BASE = 6000; // 6 seconds between spawns (slower)
+const SPAWN_INTERVAL_MIN = 3000;  // Minimum 3 seconds (slower)
+const SPAWN_INTERVAL_DECREASE_PER_LEVEL = 100; // Even slower decrease per level
 
 const POINTS_PER_WORD = 10;
 const WORDS_PER_LEVEL = 10; // 10 words per level (was 5) - slower progression
