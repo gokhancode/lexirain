@@ -9,6 +9,8 @@ import {
   Modal,
   Animated,
   Dimensions,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
@@ -244,62 +246,71 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
   return (
     <CloudBackground variant="day" showClouds={!gameState.isPlaying}>
       <StatusBar barStyle="dark-content" />
-      <SafeAreaView style={styles.container}>
-        {/* Game Header */}
-        {gameState.isPlaying && !isCountingDown && (
-          <GameHeader gameState={gameState} onPause={handlePause} />
-        )}
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoid}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={0}
+      >
+        <SafeAreaView style={styles.container}>
+          {/* Game Header */}
+          {gameState.isPlaying && !isCountingDown && (
+            <GameHeader gameState={gameState} onPause={handlePause} />
+          )}
 
-        {/* Game Area */}
-        <View style={styles.gameArea}>
-          {/* Falling Words */}
-          {fallingWords.map((fw) => (
-            <FallingWord
-              key={fw.id}
-              meaning={fw.word.meaning}
-              x={fw.x}
-              animatedY={fw.animatedY}
+          {/* Game Area - this shrinks when keyboard is open */}
+          <View style={styles.gameArea}>
+            {/* Falling Words */}
+            {fallingWords.map((fw) => (
+              <FallingWord
+                key={fw.id}
+                meaning={fw.word.meaning}
+                x={fw.x}
+                animatedY={fw.animatedY}
+              />
+            ))}
+          </View>
+
+          {/* Input Area */}
+          {gameState.isPlaying && !gameState.isPaused && !isCountingDown && (
+            <GameInput
+              value={currentInput}
+              onChangeText={setCurrentInput}
+              onSubmit={handleSubmit}
+              feedback={feedback}
+              disabled={gameState.isGameOver}
             />
-          ))}
-        </View>
+          )}
 
-        {/* Input Area */}
-        {gameState.isPlaying && !gameState.isPaused && !isCountingDown && (
-          <GameInput
-            value={currentInput}
-            onChangeText={setCurrentInput}
-            onSubmit={handleSubmit}
-            feedback={feedback}
-            disabled={gameState.isGameOver}
+          {/* Countdown Overlay */}
+          {isCountingDown && <CountdownOverlay count={countdown} />}
+
+          {/* Pause Modal */}
+          <PauseModal
+            visible={gameState.isPaused}
+            onResume={handleResume}
+            onRestart={handleRestart}
+            onQuit={handleQuit}
           />
-        )}
 
-        {/* Countdown Overlay */}
-        {isCountingDown && <CountdownOverlay count={countdown} />}
-
-        {/* Pause Modal */}
-        <PauseModal
-          visible={gameState.isPaused}
-          onResume={handleResume}
-          onRestart={handleRestart}
-          onQuit={handleQuit}
-        />
-
-        {/* Game Over Modal */}
-        <GameOverModal
-          visible={gameState.isGameOver}
-          score={gameState.score}
-          level={gameState.level}
-          wordsCompleted={gameState.wordsCompleted}
-          onRestart={handleRestart}
-          onQuit={handleQuit}
-        />
-      </SafeAreaView>
+          {/* Game Over Modal */}
+          <GameOverModal
+            visible={gameState.isGameOver}
+            score={gameState.score}
+            level={gameState.level}
+            wordsCompleted={gameState.wordsCompleted}
+            onRestart={handleRestart}
+            onQuit={handleQuit}
+          />
+        </SafeAreaView>
+      </KeyboardAvoidingView>
     </CloudBackground>
   );
 };
 
 const styles = StyleSheet.create({
+  keyboardAvoid: {
+    flex: 1,
+  },
   container: {
     flex: 1,
   },

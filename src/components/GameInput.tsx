@@ -160,6 +160,8 @@ export const GameInput: React.FC<GameInputProps> = ({
             autoCorrect={false}
             editable={!disabled}
             returnKeyType="done"
+            autoFocus={true}
+            blurOnSubmit={false}
           />
         </View>
 
@@ -168,7 +170,11 @@ export const GameInput: React.FC<GameInputProps> = ({
             styles.submitButton,
             disabled && styles.submitButtonDisabled,
           ]}
-          onPress={onSubmit}
+          onPress={() => {
+            onSubmit();
+            // Refocus input after button press
+            inputRef.current?.focus();
+          }}
           disabled={disabled}
           activeOpacity={0.8}
         >
