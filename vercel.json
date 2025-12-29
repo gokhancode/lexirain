@@ -10,6 +10,10 @@
       "destination": "/api/$1"
     },
     {
+      "source": "/dashboard",
+      "destination": "/api/dashboard"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { getEvents, getStats } from './storage';
 
 /**
  * View Analytics API endpoint
@@ -6,10 +7,6 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
  * 
  * Access at: https://lexirain.vercel.app/api/view-analytics
  */
-
-// Simple in-memory storage (resets on server restart)
-// For production, use a database instead
-let analyticsData: any[] = [];
 
 export default async function handler(
   req: VercelRequest,
@@ -34,38 +31,20 @@ export default async function handler(
   try {
     const { type, limit = 100 } = req.query;
 
-    // Filter by event type if specified
-    let filteredData = analyticsData;
-    if (type) {
-      filteredData = analyticsData.filter(event => event.type === type);
-    }
+    // Get events with filters
+    const events = getEvents({
+      type: type as string,
+      limit: Number(limit),
+    });
 
-    // Limit results
-    const limitedData = filteredData.slice(-Number(limit));
-
-    // Calculate statistics
-    const stats = {
-      totalEvents: analyticsData.length,
-      byType: analyticsData.reduce((acc: any, event: any) => {
-        acc[event.type] = (acc[event.type] || 0) + 1;
-        return acc;
-      }, {}),
-      answers: {
-        total: analyticsData.filter((e: any) => e.type === 'answer').length,
-        correct: analyticsData.filter((e: any) => e.type === 'answer' && e.data?.isCorrect).length,
-        wrong: analyticsData.filter((e: any) => e.type === 'answer' && !e.data?.isCorrect).length,
-      },
-      games: {
-        started: analyticsData.filter((e: any) => e.type === 'game_start').length,
-        ended: analyticsData.filter((e: any) => e.type === 'game_end').length,
-      },
-    };
+    // Get statistics
+    const stats = getStats();
 
     return res.status(200).json({
       success: true,
       stats,
-      events: limitedData.reverse(), // Most recent first
-      count: limitedData.length,
+      events,
+      count: events.length,
     });
 
   } catch (error) {

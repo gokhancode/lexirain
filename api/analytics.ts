@@ -1,18 +1,15 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { addEvents } from './storage';
 
 /**
  * Analytics API endpoint
  * Receives game analytics data from the LexiRain app
  * 
  * To view the data:
- * 1. Visit: https://lexirain.vercel.app/api/view-analytics
+ * 1. Visit: https://lexirain.vercel.app/api/dashboard
  * 2. Check Vercel function logs in your dashboard
  * 3. Store in a database (see examples below)
  */
-
-// Simple in-memory storage (shared with view-analytics.ts)
-// Note: This resets on server restart. For production, use a database.
-let analyticsData: any[] = [];
 
 export default async function handler(
   req: VercelRequest,
@@ -39,19 +36,14 @@ export default async function handler(
     // Log events to console (visible in Vercel logs)
     console.log(`[Analytics] Received ${events.length} event(s):`, JSON.stringify(events, null, 2));
 
-    // Store events in memory (for viewing via /api/view-analytics)
+    // Store events (for viewing via /api/view-analytics)
     // Add timestamp to each event
     const eventsWithTimestamp = events.map(event => ({
       ...event,
       receivedAt: new Date().toISOString(),
     }));
     
-    analyticsData.push(...eventsWithTimestamp);
-    
-    // Keep only last 1000 events to prevent memory issues
-    if (analyticsData.length > 1000) {
-      analyticsData = analyticsData.slice(-1000);
-    }
+    addEvents(eventsWithTimestamp);
 
     // Process each event
     for (const event of events) {
