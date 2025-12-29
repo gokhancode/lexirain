@@ -56,6 +56,3 @@ export default async function handler(
   }
 }
 
-// Export the storage array so analytics.ts can write to it
-export { analyticsData };
-
