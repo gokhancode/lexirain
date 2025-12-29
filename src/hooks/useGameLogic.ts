@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { Animated, Dimensions } from 'react-native';
 import { VocabularyWord, GameState } from '../types';
 import { vocabularyLibrary, LanguageKey } from '../data/vocabulary';
+import { analytics } from '../services/analytics';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 const INITIAL_LIVES = 3;
@@ -113,7 +114,33 @@ export const useGameLogic = (language: LanguageKey = 'spanish') => {
         // Word hit the ground - lose a life
         setGameState(prev => {
           const newLives = prev.lives - 1;
-          if (newLives <= 0) {
+          const isGameOver = newLives <= 0;
+          
+          // Track missed word
+          analytics.trackAnswer({
+            language,
+            wordId: word.id,
+            word: word.meaning,
+            translation: word.translation,
+            userAnswer: '',
+            isCorrect: false,
+            level: prev.level,
+            timestamp: new Date().toISOString(),
+          });
+
+          // Track game end if game over
+          if (isGameOver) {
+            analytics.trackGameEnd({
+              language,
+              score: prev.score,
+              level: prev.level,
+              wordsCompleted: prev.wordsCompleted,
+              livesRemaining: 0,
+              timestamp: new Date().toISOString(),
+            });
+          }
+
+          if (isGameOver) {
             return { ...prev, lives: 0, isGameOver: true, isPlaying: false };
           }
           return { ...prev, lives: newLives };
@@ -142,6 +169,18 @@ export const useGameLogic = (language: LanguageKey = 'spanish') => {
           const newLevel = Math.floor(newWordsCompleted / WORDS_PER_LEVEL) + 1;
           const levelBonus = newLevel > prev.level ? 50 : 0;
 
+          // Track correct answer
+          analytics.trackAnswer({
+            language,
+            wordId: word.id,
+            word: word.meaning,
+            translation: word.translation,
+            userAnswer: normalizedInput,
+            isCorrect: true,
+            level: prev.level,
+            timestamp: new Date().toISOString(),
+          });
+
           return {
             ...prev,
             score: prev.score + POINTS_PER_WORD + levelBonus,
@@ -157,7 +196,21 @@ export const useGameLogic = (language: LanguageKey = 'spanish') => {
       }
     }
 
-    // Wrong answer
+    // Wrong answer - track the first falling word as the attempted answer
+    if (fallingWords.length > 0) {
+      const attemptedWord = fallingWords[0];
+      analytics.trackAnswer({
+        language,
+        wordId: attemptedWord.word.id,
+        word: attemptedWord.word.meaning,
+        translation: attemptedWord.word.translation,
+        userAnswer: normalizedInput,
+        isCorrect: false,
+        level: gameState.level,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
     setFeedback({ type: 'wrong' });
     setTimeout(() => setFeedback({ type: null }), 300);
     return false;
@@ -184,7 +237,10 @@ export const useGameLogic = (language: LanguageKey = 'spanish') => {
       isPaused: false,
       isGameOver: false,
     });
-  }, [fallingWords]);
+
+    // Track game start
+    analytics.trackGameStart(language);
+  }, [fallingWords, language]);
 
   const pauseGame = useCallback(() => {
     setGameState(prev => ({ ...prev, isPaused: true }));
