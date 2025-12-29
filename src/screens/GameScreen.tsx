@@ -241,9 +241,6 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
     resumeGame();
   };
 
-  // Danger zone indicator (bottom area)
-  const dangerZoneHeight = 120;
-
   return (
     <CloudBackground variant="day" showClouds={!gameState.isPlaying}>
       <StatusBar barStyle="dark-content" />
@@ -264,17 +261,6 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation, route }) => 
               animatedY={fw.animatedY}
             />
           ))}
-
-          {/* Danger Zone Indicator */}
-          {gameState.isPlaying && !gameState.isPaused && (
-            <View
-              style={[
-                styles.dangerZone,
-                { height: dangerZoneHeight }
-              ]}
-              pointerEvents="none"
-            />
-          )}
         </View>
 
         {/* Input Area */}
@@ -321,15 +307,6 @@ const styles = StyleSheet.create({
     flex: 1,
     position: 'relative',
     overflow: 'hidden',
-  },
-  dangerZone: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(229, 115, 115, 0.15)',
-    borderTopWidth: 2,
-    borderTopColor: 'rgba(229, 115, 115, 0.3)',
   },
   countdownOverlay: {
     ...StyleSheet.absoluteFillObject,
