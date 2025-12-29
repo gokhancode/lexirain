@@ -8,6 +8,8 @@ import {
   Animated,
 } from 'react-native';
 import { colors, typography, spacing, shadows, borderRadius } from '../theme';
+import { useSettings } from '../context/SettingsContext';
+import { useGameFeedback } from '../hooks/useGameFeedback';
 
 interface GameInputProps {
   value: string;
@@ -27,6 +29,10 @@ export const GameInput: React.FC<GameInputProps> = ({
   const inputRef = useRef<TextInput>(null);
   const shakeAnim = useRef(new Animated.Value(0)).current;
   const feedbackOpacity = useRef(new Animated.Value(0)).current;
+  const lastFeedbackType = useRef<string | null>(null);
+
+  const { settings } = useSettings();
+  const { triggerFeedback } = useGameFeedback();
 
   useEffect(() => {
     if (!disabled) {
@@ -35,26 +41,34 @@ export const GameInput: React.FC<GameInputProps> = ({
   }, [disabled]);
 
   useEffect(() => {
-    if (feedback.type === 'wrong') {
-      // Shake animation for wrong answer
-      Animated.sequence([
-        Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
-        Animated.timing(shakeAnim, { toValue: -10, duration: 50, useNativeDriver: true }),
-        Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
-        Animated.timing(shakeAnim, { toValue: 0, duration: 50, useNativeDriver: true }),
-      ]).start();
-    }
+    // Only trigger feedback if the type changed (avoid double triggers)
+    if (feedback.type && feedback.type !== lastFeedbackType.current) {
+      lastFeedbackType.current = feedback.type;
 
-    if (feedback.type) {
+      // Trigger sound and haptics
+      triggerFeedback(feedback.type);
+
+      if (feedback.type === 'wrong') {
+        // Shake animation for wrong answer
+        Animated.sequence([
+          Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
+          Animated.timing(shakeAnim, { toValue: -10, duration: 50, useNativeDriver: true }),
+          Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
+          Animated.timing(shakeAnim, { toValue: 0, duration: 50, useNativeDriver: true }),
+        ]).start();
+      }
+
       feedbackOpacity.setValue(1);
       Animated.timing(feedbackOpacity, {
         toValue: 0,
-        duration: 1500,
-        delay: 500,
+        duration: feedback.type === 'missed' ? 2500 : 1500,
+        delay: feedback.type === 'missed' ? 1000 : 500,
         useNativeDriver: true,
       }).start();
+    } else if (!feedback.type) {
+      lastFeedbackType.current = null;
     }
-  }, [feedback.type, shakeAnim, feedbackOpacity]);
+  }, [feedback.type, shakeAnim, feedbackOpacity, triggerFeedback]);
 
   const getInputStyle = () => {
     switch (feedback.type) {
@@ -86,9 +100,13 @@ export const GameInput: React.FC<GameInputProps> = ({
           bgColor: 'rgba(229, 115, 115, 0.15)',
         };
       case 'missed':
+        // Show the translation as a hint if hints are enabled
+        const hintText = settings.showHints && feedback.word
+          ? `Answer: ${feedback.word}`
+          : 'Missed!';
         return {
           icon: '💧',
-          text: feedback.word || 'Missed!',
+          text: hintText,
           color: colors.warning,
           bgColor: 'rgba(255, 183, 77, 0.15)',
         };

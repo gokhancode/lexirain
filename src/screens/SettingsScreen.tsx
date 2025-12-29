@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { CloudBackground } from '../components/CloudBackground';
 import { colors, typography, spacing, shadows, borderRadius } from '../theme';
 import { RootStackParamList } from '../navigation/types';
+import { useSettings } from '../context/SettingsContext';
 
 type SettingsScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Settings'>;
@@ -70,9 +71,7 @@ const SettingRow: React.FC<SettingRowProps> = ({
 };
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) => {
-  const [soundEnabled, setSoundEnabled] = useState(true);
-  const [hapticEnabled, setHapticEnabled] = useState(true);
-  const [showHints, setShowHints] = useState(true);
+  const { settings, updateSetting } = useSettings();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
@@ -127,24 +126,24 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
                 icon="🔊"
                 title="Sound Effects"
                 subtitle="Play sounds for correct/wrong answers"
-                value={soundEnabled}
-                onValueChange={setSoundEnabled}
+                value={settings.soundEnabled}
+                onValueChange={(value) => updateSetting('soundEnabled', value)}
               />
               <View style={styles.divider} />
               <SettingRow
                 icon="📳"
                 title="Haptic Feedback"
                 subtitle="Vibrate on interactions"
-                value={hapticEnabled}
-                onValueChange={setHapticEnabled}
+                value={settings.hapticEnabled}
+                onValueChange={(value) => updateSetting('hapticEnabled', value)}
               />
               <View style={styles.divider} />
               <SettingRow
                 icon="💡"
                 title="Show Hints"
-                subtitle="Display missed word translations"
-                value={showHints}
-                onValueChange={setShowHints}
+                subtitle="Show correct translation when missed"
+                value={settings.showHints}
+                onValueChange={(value) => updateSetting('showHints', value)}
               />
             </View>
           </View>
@@ -157,21 +156,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
                 icon="📖"
                 title="How to Play"
                 onPress={() => navigation.navigate('HowToPlay')}
-                showArrow
-              />
-              <View style={styles.divider} />
-              <SettingRow
-                icon="⭐"
-                title="Rate LexiRain"
-                subtitle="Help us improve!"
-                onPress={() => {}}
-                showArrow
-              />
-              <View style={styles.divider} />
-              <SettingRow
-                icon="📧"
-                title="Send Feedback"
-                onPress={() => {}}
                 showArrow
               />
             </View>
