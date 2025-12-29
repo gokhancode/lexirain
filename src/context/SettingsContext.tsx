@@ -31,7 +31,14 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
       try {
         const stored = await AsyncStorage.getItem(STORAGE_KEY);
         if (stored) {
-          setSettings({ ...defaultSettings, ...JSON.parse(stored) });
+          const parsed = JSON.parse(stored);
+          // Ensure all values are proper booleans (not strings)
+          const sanitized: Settings = {
+            soundEnabled: parsed.soundEnabled === true || parsed.soundEnabled === 'true',
+            hapticEnabled: parsed.hapticEnabled === true || parsed.hapticEnabled === 'true',
+            showHints: parsed.showHints === true || parsed.showHints === 'true',
+          };
+          setSettings(sanitized);
         }
       } catch (error) {
         console.log('Failed to load settings:', error);
